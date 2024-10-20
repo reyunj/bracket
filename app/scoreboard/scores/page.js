@@ -63,11 +63,12 @@ const Scores = () => {
                     {judge}
                   </th>
                 ))}
-                <th className="border border-white px-6 py-4 text-left text-2xl font-semibold text-white">
-                  Total Score
-                </th>
+
                 <th className="border border-white px-6 py-4 text-left text-2xl font-semibold text-white">
                   Average Score
+                </th>
+                <th className="border border-white px-6 py-4 text-left text-2xl font-semibold text-white">
+                  Total Score
                 </th>
               </tr>
             </thead>
