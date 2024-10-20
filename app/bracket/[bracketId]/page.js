@@ -2,7 +2,7 @@
 import { useParams } from "next/navigation";
 
 export default function BracketPage() {
-  const { bracketId } = useParams(); // Get the bracket ID from the URL
+  const { bracketId } = useParams();
 
   const iframeSrc = `https://brackethq.com/b/${bracketId}/embed/?zoom=0`;
 
