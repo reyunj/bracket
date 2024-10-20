@@ -1,12 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Footer from "../component/Footer";
 
 export default function Bracket() {
   const [bracketId, setBracketId] = useState("");
-  const router = useRouter();
 
   const handleBracketIdChange = (e) => {
     setBracketId(e.target.value);
@@ -14,7 +12,7 @@ export default function Bracket() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    router.push(`/bracket/${bracketId}`);
+    window.open(`/bracket/${bracketId}`, "_blank");
   };
 
   return (
