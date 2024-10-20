@@ -125,8 +125,8 @@ export default function Scoreboard() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-100 overflow-hidden">
-      <div className="container mx-auto flex flex-col justify-center items-center p-6 flex-grow overflow-auto">
+    <div className="flex flex-col h-screen">
+      <div className="container mx-auto flex flex-col justify-center items-center p-6 flex-grow ">
         <h1 className="text-3xl font-bold mb-6">Scoreboard</h1>
 
         {/* Add Participants Section */}
