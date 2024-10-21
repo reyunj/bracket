@@ -11,38 +11,42 @@ export default function Scoreboard() {
   const [scores, setScores] = useState({});
 
   useEffect(() => {
-    const storedScores = localStorage.getItem("scores");
-    if (storedScores) {
-      const { judges, participants, scores } = JSON.parse(storedScores);
-      setJudges(judges);
-      setParticipants(participants);
-      setScores(scores);
-    }
+    // Get the session ID from the URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get("sessionId");
+
+    // Load scores from localStorage using the session ID
+    const loadScores = () => {
+      const storedScores = localStorage.getItem(`scores-${sessionId}`);
+      if (storedScores) {
+        const { judges, participants, scores } = JSON.parse(storedScores);
+        setJudges(judges);
+        setParticipants(participants);
+        setScores(scores);
+        console.log("Loaded Scores: ", { judges, participants, scores });
+      }
+    };
+
+    loadScores();
   }, []);
 
   useEffect(() => {
-    localStorage.setItem(
-      "scores",
-      JSON.stringify({ judges, participants, scores })
-    );
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get("sessionId");
+
+    // Save scores to localStorage with the session ID
+    const saveScores = () => {
+      if (sessionId) {
+        const dataToSave = { judges, participants, scores };
+        localStorage.setItem(`scores-${sessionId}`, JSON.stringify(dataToSave));
+        console.log("Saved Scores: ", dataToSave);
+      }
+    };
+
+    saveScores();
   }, [judges, participants, scores]);
 
   const handleAdd = () => {
-    if (!participantNames.trim() && !judgeNames.trim()) {
-      alert("Please enter at least one participant or judge name.");
-      return;
-    }
-
-    if (!participantNames.trim()) {
-      alert("Please enter at least one participant name.");
-      return;
-    }
-
-    if (!judgeNames.trim()) {
-      alert("Please enter at least one judge name.");
-      return;
-    }
-
     const participantArray = participantNames
       .split("\n")
       .map((name) => name.trim())
@@ -52,6 +56,13 @@ export default function Scoreboard() {
       .map((name) => name.trim())
       .filter(Boolean);
 
+    // Validate input
+    if (participantArray.length === 0 || judgeArray.length === 0) {
+      alert("Please enter at least one participant and one judge name.");
+      return;
+    }
+
+    // Add new participants
     const newParticipants = participantArray.filter(
       (name) => !participants.includes(name)
     );
@@ -71,12 +82,9 @@ export default function Scoreboard() {
       setParticipantNames("");
     }
 
+    // Add new judges
     const newJudges = judgeArray.filter((name) => !judges.includes(name));
     if (newJudges.length > 0) {
-      if (participants.length === 0 && newParticipants.length === 0) {
-        alert("Please add participants before adding judges.");
-        return;
-      }
       setJudges((prev) => [...prev, ...newJudges]);
       newJudges.forEach((judge) => {
         setScores((prev) => ({ ...prev, [judge]: {} }));
@@ -110,12 +118,17 @@ export default function Scoreboard() {
   };
 
   const handleViewScores = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get("sessionId");
+
     const scoresData = {
       judges: judges.join(","),
       participants: participants.join(","),
       scores: JSON.stringify(scores),
+      sessionId: sessionId, // Include sessionId in the URL
     };
-    const scoresURL = new URL("scoreboard/scores", window.location.origin);
+
+    const scoresURL = new URL("/scoreboard/scores", window.location.origin);
     scoresURL.search = new URLSearchParams(scoresData).toString();
     window.open(scoresURL, "_blank");
   };
@@ -184,22 +197,22 @@ export default function Scoreboard() {
                       onChange={(e) =>
                         handleScoreChange(judge, participant, e.target.value)
                       }
-                      className="border border-gray-300 rounded-md p-2 flex-grow"
+                      className="border border-gray-300 rounded-md p-1 w-16"
+                      min="0"
+                      max="10" // Assuming the score is out of 10
                     />
                   </div>
                 ))
               )}
-              <strong className="block mt-2">
-                Total:{" "}
-                <span className="font-bold">{totalScore(participant)}</span>
-              </strong>
+              <p className="font-semibold">
+                Total Score: {totalScore(participant)}
+              </p>
             </div>
           ))
         )}
-
         <button
           onClick={handleViewScores}
-          className="mt-4 bg-green-500 text-white rounded-md p-2 hover:bg-green-600 w-full max-w-md"
+          className="mt-6 bg-green-500 text-white rounded-md p-2 hover:bg-green-600 w-full max-w-md"
         >
           View Scores
         </button>
