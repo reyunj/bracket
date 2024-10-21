@@ -3,13 +3,13 @@ import Link from "next/link";
 import Image from "next/image";
 import Logo from "@/app/assets/Logo.jpg";
 import Footer from "./component/Footer";
-import { v4 as uuidv4 } from "uuid"; // Import uuid
+import { v4 as uuidv4 } from "uuid";
 
 export default function Home() {
   const handleScoreboardClick = () => {
-    const uniqueId = uuidv4(); // Generate unique ID
-    localStorage.setItem("scoreboardId", uniqueId); // Store ID in local storage
-    window.open(`/scoreboard?sessionId=${uniqueId}`, "_blank"); // Open scoreboard in new tab
+    const uniqueId = uuidv4();
+    localStorage.setItem("scoreboardId", uniqueId);
+    window.open(`/scoreboard?sessionId=${uniqueId}`, "_blank");
   };
 
   return (
@@ -34,7 +34,7 @@ export default function Home() {
             </button>
           </Link>
           <button
-            onClick={handleScoreboardClick} // Update the button to call the function
+            onClick={handleScoreboardClick}
             className="border border-transparent p-3 bg-green-500 text-white rounded-md hover:bg-green-600 transition duration-300 w-64 text-center"
           >
             Scoreboard

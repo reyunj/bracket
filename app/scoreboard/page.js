@@ -9,21 +9,30 @@ export default function Scoreboard() {
   const [judgeNames, setJudgeNames] = useState("");
   const [participantNames, setParticipantNames] = useState("");
   const [scores, setScores] = useState({});
+  const [category, setCategory] = useState(""); // New state for category
+  const [tournamentName, setTournamentName] = useState(""); // New state for tournament name
 
   useEffect(() => {
-    // Get the session ID from the URL
     const urlParams = new URLSearchParams(window.location.search);
     const sessionId = urlParams.get("sessionId");
 
-    // Load scores from localStorage using the session ID
     const loadScores = () => {
       const storedScores = localStorage.getItem(`scores-${sessionId}`);
       if (storedScores) {
-        const { judges, participants, scores } = JSON.parse(storedScores);
+        const { judges, participants, scores, category, tournamentName } =
+          JSON.parse(storedScores);
         setJudges(judges);
         setParticipants(participants);
         setScores(scores);
-        console.log("Loaded Scores: ", { judges, participants, scores });
+        setCategory(category); // Load category
+        setTournamentName(tournamentName); // Load tournament name
+        console.log("Loaded Scores: ", {
+          judges,
+          participants,
+          scores,
+          category,
+          tournamentName,
+        });
       }
     };
 
@@ -34,17 +43,22 @@ export default function Scoreboard() {
     const urlParams = new URLSearchParams(window.location.search);
     const sessionId = urlParams.get("sessionId");
 
-    // Save scores to localStorage with the session ID
     const saveScores = () => {
       if (sessionId) {
-        const dataToSave = { judges, participants, scores };
+        const dataToSave = {
+          judges,
+          participants,
+          scores,
+          category,
+          tournamentName,
+        }; // Save category and tournament name
         localStorage.setItem(`scores-${sessionId}`, JSON.stringify(dataToSave));
         console.log("Saved Scores: ", dataToSave);
       }
     };
 
     saveScores();
-  }, [judges, participants, scores]);
+  }, [judges, participants, scores, category, tournamentName]);
 
   const handleAdd = () => {
     const participantArray = participantNames
@@ -56,13 +70,11 @@ export default function Scoreboard() {
       .map((name) => name.trim())
       .filter(Boolean);
 
-    // Validate input
     if (participantArray.length === 0 || judgeArray.length === 0) {
       alert("Please enter at least one participant and one judge name.");
       return;
     }
 
-    // Add new participants
     const newParticipants = participantArray.filter(
       (name) => !participants.includes(name)
     );
@@ -82,7 +94,6 @@ export default function Scoreboard() {
       setParticipantNames("");
     }
 
-    // Add new judges
     const newJudges = judgeArray.filter((name) => !judges.includes(name));
     if (newJudges.length > 0) {
       setJudges((prev) => [...prev, ...newJudges]);
@@ -125,7 +136,9 @@ export default function Scoreboard() {
       judges: judges.join(","),
       participants: participants.join(","),
       scores: JSON.stringify(scores),
-      sessionId: sessionId, // Include sessionId in the URL
+      category, // Include category in scores data
+      tournamentName, // Include tournament name in scores data
+      sessionId: sessionId,
     };
 
     const scoresURL = new URL("/scoreboard/scores", window.location.origin);
@@ -137,6 +150,28 @@ export default function Scoreboard() {
     <div className="flex flex-col h-screen">
       <div className="container mx-auto flex flex-col justify-center items-center p-6 flex-grow ">
         <h1 className="text-3xl font-bold mb-6">Scoreboard</h1>
+
+        <div className="mb-6 w-full max-w-md">
+          <h2 className="text-xl font-semibold mb-2">Category</h2>
+          <input
+            type="text"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            placeholder="Enter Category"
+            className="border border-gray-300 rounded-md p-2 w-full"
+          />
+        </div>
+
+        <div className="mb-6 w-full max-w-md">
+          <h2 className="text-xl font-semibold mb-2">Tournament Name</h2>
+          <input
+            type="text"
+            value={tournamentName}
+            onChange={(e) => setTournamentName(e.target.value)}
+            placeholder="Enter Tournament Name"
+            className="border border-gray-300 rounded-md p-2 w-full"
+          />
+        </div>
 
         <div className="mb-6 w-full max-w-md">
           <h2 className="text-xl font-semibold mb-2">Add Participants</h2>
@@ -197,9 +232,9 @@ export default function Scoreboard() {
                       onChange={(e) =>
                         handleScoreChange(judge, participant, e.target.value)
                       }
-                      className="border border-gray-300 rounded-md p-1 w-16"
+                      className="border border-gray-300 rounded-md p-1 w-full"
                       min="0"
-                      max="10" // Assuming the score is out of 10
+                      max="10"
                     />
                   </div>
                 ))
