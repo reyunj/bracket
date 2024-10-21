@@ -11,7 +11,6 @@ export default function Scoreboard() {
   const [scores, setScores] = useState({});
 
   useEffect(() => {
-    // Load scores from localStorage on component mount
     const storedScores = localStorage.getItem("scores");
     if (storedScores) {
       const { judges, participants, scores } = JSON.parse(storedScores);
@@ -22,7 +21,6 @@ export default function Scoreboard() {
   }, []);
 
   useEffect(() => {
-    // Save scores to localStorage whenever scores change
     localStorage.setItem(
       "scores",
       JSON.stringify({ judges, participants, scores })
@@ -54,7 +52,6 @@ export default function Scoreboard() {
       .map((name) => name.trim())
       .filter(Boolean);
 
-    // Add participants
     const newParticipants = participantArray.filter(
       (name) => !participants.includes(name)
     );
@@ -71,10 +68,9 @@ export default function Scoreboard() {
           },
         }));
       });
-      setParticipantNames(""); // Clear the participant textarea
+      setParticipantNames("");
     }
 
-    // Add judges
     const newJudges = judgeArray.filter((name) => !judges.includes(name));
     if (newJudges.length > 0) {
       if (participants.length === 0 && newParticipants.length === 0) {
@@ -85,7 +81,7 @@ export default function Scoreboard() {
       newJudges.forEach((judge) => {
         setScores((prev) => ({ ...prev, [judge]: {} }));
       });
-      setJudgeNames(""); // Clear the judge textarea
+      setJudgeNames("");
     }
   };
 
@@ -129,7 +125,6 @@ export default function Scoreboard() {
       <div className="container mx-auto flex flex-col justify-center items-center p-6 flex-grow ">
         <h1 className="text-3xl font-bold mb-6">Scoreboard</h1>
 
-        {/* Add Participants Section */}
         <div className="mb-6 w-full max-w-md">
           <h2 className="text-xl font-semibold mb-2">Add Participants</h2>
           <textarea
@@ -141,7 +136,6 @@ export default function Scoreboard() {
           />
         </div>
 
-        {/* Add Judges Section */}
         <div className="mb-4 w-full max-w-md">
           <h2 className="text-xl font-semibold mb-2">Add Judges</h2>
           <textarea
@@ -153,7 +147,6 @@ export default function Scoreboard() {
           />
         </div>
 
-        {/* Unified Add Button */}
         <button
           onClick={handleAdd}
           className="mt-2 bg-blue-500 text-white rounded-md p-2 hover:bg-blue-600 w-full max-w-md"
@@ -161,7 +154,6 @@ export default function Scoreboard() {
           Add Participants and Judges
         </button>
 
-        {/* Scores Section */}
         <h2 className="text-xl font-semibold mb-2 mt-6">Scores</h2>
         {participants.length === 0 ? (
           <p className="text-gray-500">No participants added yet.</p>
@@ -205,7 +197,6 @@ export default function Scoreboard() {
           ))
         )}
 
-        {/* Navigation to Scores Page */}
         <button
           onClick={handleViewScores}
           className="mt-4 bg-green-500 text-white rounded-md p-2 hover:bg-green-600 w-full max-w-md"

@@ -17,7 +17,7 @@ export default function Home() {
           />
         </div>
         <h1 className="text-3xl font-bold mb-6 text-center">
-          Welcome to The Karate Network Management System
+          The Karate Network Management System
         </h1>
         <div className="flex flex-col space-y-4">
           <Link href="/bracket">

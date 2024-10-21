@@ -5,14 +5,33 @@ import Footer from "../component/Footer";
 
 export default function Bracket() {
   const [bracketId, setBracketId] = useState("");
+  const [tournamentName, setTournamentName] = useState("");
+  const [category, setCategory] = useState("");
 
   const handleBracketIdChange = (e) => {
     setBracketId(e.target.value);
   };
 
+  const handleTournamentNameChange = (e) => {
+    setTournamentName(e.target.value);
+  };
+
+  const handleCategoryChange = (e) => {
+    setCategory(e.target.value);
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    window.open(`/bracket/${bracketId}`, "_blank");
+
+    if (!tournamentName || !category || !bracketId) {
+      alert("All fields are required!");
+      return;
+    }
+
+    const tournamentParam = encodeURIComponent(tournamentName);
+    const categoryParam = encodeURIComponent(category);
+    const bracketUrl = `/bracket/${bracketId}?tournament=${tournamentParam}&category=${categoryParam}`;
+    window.open(bracketUrl, "_blank");
   };
 
   return (
@@ -21,14 +40,29 @@ export default function Bracket() {
         <h2 className="text-2xl font-bold mb-4">Bracket Generator</h2>
         <form
           onSubmit={handleSubmit}
-          className="flex flex-col sm:flex-row w-full max-w-md mb-4 px-4"
+          className="flex flex-col w-full max-w-md mb-4 px-4"
         >
           <input
             type="text"
             value={bracketId}
             onChange={handleBracketIdChange}
             placeholder="Enter bracket ID"
-            className="border border-gray-300 p-3 rounded-md w-full sm:w-3/4 mb-2 sm:mb-0 sm:mr-2 transition duration-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="border border-gray-300 p-3 rounded-md w-full mb-2 transition duration-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          />
+
+          <input
+            type="text"
+            value={category}
+            onChange={handleCategoryChange}
+            placeholder="Category"
+            className="border border-gray-300 p-3 rounded-md w-full mb-2 transition duration-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          />
+          <input
+            type="text"
+            value={tournamentName}
+            onChange={handleTournamentNameChange}
+            placeholder="Tournament Name"
+            className="border border-gray-300 p-3 rounded-md w-full mb-2 transition duration-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
           <button
             type="submit"
