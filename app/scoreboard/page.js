@@ -1,256 +1,345 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Footer from "../component/Footer";
+import Footer from "@/app/component/Footer.js";
 
 export default function Scoreboard() {
-  const [judges, setJudges] = useState([]);
-  const [participants, setParticipants] = useState([]);
-  const [judgeNames, setJudgeNames] = useState("");
-  const [participantNames, setParticipantNames] = useState("");
-  const [scores, setScores] = useState({});
-  const [category, setCategory] = useState(""); // New state for category
-  const [tournamentName, setTournamentName] = useState(""); // New state for tournament name
+  const [formData, setFormData] = useState({
+    category: "",
+    fieldTakami: "",
+    ageBracket: "",
+    ageDirection: "",
+    rank: "",
+    ks: "",
+    gender: "",
+    match: "",
+    participants1: "",
+    participants2: "",
+  });
+
+  const [fieldErrors, setFieldErrors] = useState({
+    fieldTakami: false,
+    ks: false,
+    gender: false,
+  });
+
+  const [messages, setMessages] = useState({
+    errorMessage: "",
+    successMessage: "",
+  });
+
+  const [socialMediaName, setSocialMediaName] = useState("");
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const sessionId = urlParams.get("sessionId");
 
-    const loadScores = () => {
-      const storedScores = localStorage.getItem(`scores-${sessionId}`);
-      if (storedScores) {
-        const { judges, participants, scores, category, tournamentName } =
-          JSON.parse(storedScores);
-        setJudges(judges);
-        setParticipants(participants);
-        setScores(scores);
-        setCategory(category); // Load category
-        setTournamentName(tournamentName); // Load tournament name
-        console.log("Loaded Scores: ", {
-          judges,
-          participants,
-          scores,
-          category,
-          tournamentName,
-        });
+    if (sessionId) {
+      const savedScores = localStorage.getItem(`scores-${sessionId}`);
+      if (savedScores) {
+        setFormData({ ...formData, ...JSON.parse(savedScores) });
       }
-    };
-
-    loadScores();
+    }
   }, []);
 
-  useEffect(() => {
+  const saveScores = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const sessionId = urlParams.get("sessionId");
 
-    const saveScores = () => {
-      if (sessionId) {
-        const dataToSave = {
-          judges,
-          participants,
-          scores,
-          category,
-          tournamentName,
-        }; // Save category and tournament name
-        localStorage.setItem(`scores-${sessionId}`, JSON.stringify(dataToSave));
-        console.log("Saved Scores: ", dataToSave);
-      }
+    if (sessionId) {
+      localStorage.setItem(`scores-${sessionId}`, JSON.stringify(formData));
+      setMessages({
+        ...messages,
+        successMessage: "Setup updated successfully!",
+      });
+      setTimeout(() => setMessages({ ...messages, successMessage: "" }), 3000);
+    }
+  };
+
+  const validateFields = () => {
+    const newFieldErrors = {
+      fieldTakami: !formData.fieldTakami,
+      ks: !formData.ks,
+      gender: !formData.gender,
     };
 
-    saveScores();
-  }, [judges, participants, scores, category, tournamentName]);
-
-  const handleAdd = () => {
-    const participantArray = participantNames
-      .split("\n")
-      .map((name) => name.trim())
-      .filter(Boolean);
-    const judgeArray = judgeNames
-      .split("\n")
-      .map((name) => name.trim())
-      .filter(Boolean);
-
-    if (participantArray.length === 0 || judgeArray.length === 0) {
-      alert("Please enter at least one participant and one judge name.");
-      return;
-    }
-
-    const newParticipants = participantArray.filter(
-      (name) => !participants.includes(name)
-    );
-    if (newParticipants.length > 0) {
-      setParticipants((prev) => [...prev, ...newParticipants]);
-      judges.forEach((judge) => {
-        setScores((prev) => ({
-          ...prev,
-          [judge]: {
-            ...prev[judge],
-            ...Object.fromEntries(
-              newParticipants.map((participant) => [participant, 0])
-            ),
-          },
-        }));
-      });
-      setParticipantNames("");
-    }
-
-    const newJudges = judgeArray.filter((name) => !judges.includes(name));
-    if (newJudges.length > 0) {
-      setJudges((prev) => [...prev, ...newJudges]);
-      newJudges.forEach((judge) => {
-        setScores((prev) => ({ ...prev, [judge]: {} }));
-      });
-      setJudgeNames("");
-    }
-  };
-
-  const handleScoreChange = (judge, participant, value) => {
-    setScores((prev) => ({
-      ...prev,
-      [judge]: { ...prev[judge], [participant]: Number(value) },
-    }));
-  };
-
-  const totalScore = (participant) => {
-    return judges.reduce(
-      (total, judge) => total + (scores[judge]?.[participant] || 0),
-      0
-    );
-  };
-
-  const handleRemoveParticipant = (participant) => {
-    setParticipants((prev) => prev.filter((p) => p !== participant));
-    judges.forEach((judge) => {
-      setScores((prev) => ({
-        ...prev,
-        [judge]: { ...prev[judge], [participant]: undefined },
-      }));
-    });
+    setFieldErrors(newFieldErrors);
+    return !Object.values(newFieldErrors).includes(true);
   };
 
   const handleViewScores = () => {
+    if (!validateFields()) {
+      setMessages({
+        ...messages,
+        errorMessage: "Please fill out all required fields before viewing.",
+      });
+      return;
+    }
+
     const urlParams = new URLSearchParams(window.location.search);
     const sessionId = urlParams.get("sessionId");
-
-    const scoresData = {
-      judges: judges.join(","),
-      participants: participants.join(","),
-      scores: JSON.stringify(scores),
-      category, // Include category in scores data
-      tournamentName, // Include tournament name in scores data
-      sessionId: sessionId,
-    };
-
     const scoresURL = new URL("/scoreboard/scores", window.location.origin);
-    scoresURL.search = new URLSearchParams(scoresData).toString();
+    scoresURL.search = new URLSearchParams({
+      ...formData,
+      sessionId,
+    }).toString();
+
     window.open(scoresURL, "_blank");
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevState) => ({ ...prevState, [name]: value }));
+  };
+
+  const handleFieldTakamiChange = (e) => {
+    const value = e.target.value;
+    if (/^\d*$/.test(value) && (value === "" || parseInt(value, 10) <= 10)) {
+      setFormData((prevState) => ({ ...prevState, fieldTakami: value }));
+    }
+  };
+
+  const handleCopyLink = () => {
+    if (!validateFields()) {
+      setMessages({
+        ...messages,
+        errorMessage:
+          "Please fill out all required fields before copying the link.",
+      });
+      return;
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get("sessionId");
+    const scoresURL = new URL("/scoreboard/scores", window.location.origin);
+    scoresURL.search = new URLSearchParams({
+      ...formData,
+      sessionId,
+    }).toString();
+
+    navigator.clipboard
+      .writeText(scoresURL.toString())
+      .then(() => {
+        setMessages({
+          ...messages,
+          successMessage: "Link copied to clipboard!",
+        });
+        setTimeout(
+          () => setMessages({ ...messages, successMessage: "" }),
+          3000
+        );
+      })
+      .catch((err) => console.error("Failed to copy: ", err));
+  };
+
+  const handleGenerateSocialMediaName = () => {
+    const generatedName = Object.values(formData).filter(Boolean).join(" - ");
+    setSocialMediaName(generatedName);
   };
 
   return (
     <div className="flex flex-col h-screen">
-      <div className="container mx-auto flex flex-col justify-center items-center p-6 flex-grow ">
-        <h1 className="text-3xl font-bold mb-6">Scoreboard</h1>
-
-        <div className="mb-6 w-full max-w-md">
-          <h2 className="text-xl font-semibold mb-2">Category</h2>
-          <input
-            type="text"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            placeholder="Enter Category"
-            className="border border-gray-300 rounded-md p-2 w-full"
-          />
-        </div>
-
-        <div className="mb-6 w-full max-w-md">
-          <h2 className="text-xl font-semibold mb-2">Tournament Name</h2>
-          <input
-            type="text"
-            value={tournamentName}
-            onChange={(e) => setTournamentName(e.target.value)}
-            placeholder="Enter Tournament Name"
-            className="border border-gray-300 rounded-md p-2 w-full"
-          />
-        </div>
-
-        <div className="mb-6 w-full max-w-md">
-          <h2 className="text-xl font-semibold mb-2">Add Participants</h2>
-          <textarea
-            value={participantNames}
-            onChange={(e) => setParticipantNames(e.target.value)}
-            placeholder="Enter Participant Names (one per line)"
-            rows={4}
-            className="border border-gray-300 rounded-md p-2 w-full"
-          />
-        </div>
-
-        <div className="mb-4 w-full max-w-md">
-          <h2 className="text-xl font-semibold mb-2">Add Judges</h2>
-          <textarea
-            value={judgeNames}
-            onChange={(e) => setJudgeNames(e.target.value)}
-            placeholder="Enter Judge Names (one per line)"
-            rows={4}
-            className="border border-gray-300 rounded-md p-2 w-full"
-          />
-        </div>
-
-        <button
-          onClick={handleAdd}
-          className="mt-2 bg-blue-500 text-white rounded-md p-2 hover:bg-blue-600 w-full max-w-md"
-        >
-          Add Participants and Judges
-        </button>
-
-        <h2 className="text-xl font-semibold mb-2 mt-6">Scores</h2>
-        {participants.length === 0 ? (
-          <p className="text-gray-500">No participants added yet.</p>
-        ) : (
-          participants.map((participant) => (
-            <div
-              key={participant}
-              className="mb-4 p-4 border border-gray-300 rounded-md shadow w-full max-w-md"
-            >
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-bold">{participant}</h3>
-                <button
-                  onClick={() => handleRemoveParticipant(participant)}
-                  className="text-red-500 hover:underline"
-                >
-                  Remove
-                </button>
-              </div>
-              {judges.length === 0 ? (
-                <p className="text-gray-500">No judges added yet.</p>
-              ) : (
-                judges.map((judge) => (
-                  <div key={judge} className="flex items-center mb-2">
-                    <label className="mr-2">{judge}:</label>
-                    <input
-                      type="number"
-                      value={scores[judge]?.[participant] || ""}
-                      onChange={(e) =>
-                        handleScoreChange(judge, participant, e.target.value)
-                      }
-                      className="border border-gray-300 rounded-md p-1 w-full"
-                      min="0"
-                      max="10"
-                    />
-                  </div>
-                ))
-              )}
-              <p className="font-semibold">
-                Total Score: {totalScore(participant)}
-              </p>
-            </div>
-          ))
+      <div className="container mx-auto flex flex-col justify-center items-center p-5">
+        {messages.errorMessage && (
+          <div className="text-red-500 mb-4">{messages.errorMessage}</div>
         )}
+        {messages.successMessage && (
+          <div className="text-green-500 mb-4">{messages.successMessage}</div>
+        )}
+
+        <div className="flex w-full gap-10 bg-green-400 p-5 rounded-lg">
+          {[
+            {
+              label: "Tatami",
+              name: "fieldTakami",
+              type: "text",
+              placeholder: "Enter number",
+              maxLength: 2,
+              handleChange: handleFieldTakamiChange,
+              isError: fieldErrors.fieldTakami,
+            },
+            {
+              label: "Gender",
+              name: "gender",
+              type: "select",
+              options: ["Boys", "Girls", "Open"],
+              placeholder: "Select Gender",
+              isError: fieldErrors.gender,
+            },
+            {
+              label: "KS",
+              name: "ks",
+              type: "select",
+              options: ["Kata", "Team Kata", "Kumite"],
+              placeholder: "Select KS",
+              isError: fieldErrors.ks,
+            },
+          ].map(({ label, ...props }) => (
+            <div key={label} className="mb-6 w-full max-w-md">
+              <div className="text-xl font-semibold mb-2 text-center">
+                {label}
+              </div>
+              {props.type === "select" ? (
+                <select
+                  {...props}
+                  value={formData[props.name]}
+                  onChange={handleChange}
+                  className={`border rounded-md p-2 w-full ${
+                    props.isError ? "border-red-500" : "border-gray-300"
+                  }`}
+                >
+                  <option value="" disabled>
+                    {props.placeholder}
+                  </option>
+                  {props.options.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  {...props}
+                  value={formData[props.name]}
+                  onChange={props.handleChange}
+                  className={`border rounded-md p-2 w-full ${
+                    props.isError ? "border-red-500" : "border-gray-300"
+                  }`}
+                />
+              )}
+            </div>
+          ))}
+        </div>
+
+        <div className="p-10 text-2xl font-bold">Optional Field</div>
+        <div className="flex mx-auto w-full gap-5 bg-slate-500 p-5 rounded-lg">
+          {[
+            {
+              label: "Match",
+              name: "match",
+              type: "text",
+              placeholder: "Enter match number",
+            },
+            {
+              label: "Playoffs",
+              name: "category",
+              type: "select",
+              options: ["Group Stage", "Semi-Finals", "Championship"],
+              placeholder: "Select Category",
+            },
+            {
+              label: "Age Bracket",
+              name: "ageBracket",
+              type: "text",
+              placeholder: "Enter age bracket (e.g., 8-9)",
+            },
+            {
+              label: "Age Direction",
+              name: "ageDirection",
+              type: "select",
+              options: ["Above", "Below"],
+              placeholder: "Select Age Direction",
+            },
+            {
+              label: "Rank",
+              name: "rank",
+              type: "select",
+              options: [
+                "Newbie",
+                "Novice",
+                "Intermediate",
+                "Advance",
+                "Junior",
+                "Senior",
+                "Open",
+              ],
+              placeholder: "Select Rank",
+            },
+            {
+              label: "Participants 1",
+              name: "participants1",
+              type: "text",
+              placeholder: "Enter Participants 1",
+            },
+            {
+              label: "Participants 2",
+              name: "participants2",
+              type: "text",
+              placeholder: "Enter Participants 2",
+            },
+          ].map(({ label, ...props }) => (
+            <div key={label} className="mb-6 w-full max-w-md">
+              <div className="text-xl font-semibold mb-2 text-center">
+                {label}
+              </div>
+              {props.type === "select" ? (
+                <select
+                  {...props}
+                  value={formData[props.name]}
+                  onChange={handleChange}
+                  className="border border-gray-300 rounded-md p-2 w-full"
+                >
+                  <option value="" disabled>
+                    {props.placeholder}
+                  </option>
+                  {props.options.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  {...props}
+                  value={formData[props.name]}
+                  onChange={handleChange}
+                  className="border border-gray-300 rounded-md p-2 w-full"
+                />
+              )}
+            </div>
+          ))}
+        </div>
+
         <button
-          onClick={handleViewScores}
-          className="mt-6 bg-green-500 text-white rounded-md p-2 hover:bg-green-600 w-full max-w-md"
+          onClick={saveScores}
+          className="mt-6 bg-sky-500 text-white rounded-md p-2 hover:bg-sky-600 w-full max-w-md"
         >
-          View Scores
+          Upload/Update Setup
         </button>
+
+        <button
+          onClick={handleGenerateSocialMediaName}
+          className="mt-6 bg-yellow-500 text-white rounded-md p-2 hover:bg-yellow-600 w-full max-w-md"
+        >
+          Generate Social Media Name
+        </button>
+
+        <div className="mb-6 w-full max-w-md">
+          <div className="text-xl font-semibold mb-2 text-center p-5">
+            Social Media Name
+          </div>
+          <input
+            type="text"
+            value={socialMediaName}
+            className="border border-gray-300 rounded-md p-2 w-full bg-gray-100 cursor-default"
+            readOnly
+          />
+        </div>
+
+        <div className="flex justify-between w-full max-w-md">
+          <button
+            onClick={handleViewScores}
+            className="mt-6 bg-green-500 text-white rounded-md p-2 hover:bg-green-600 w-full mr-2"
+          >
+            View Setup
+          </button>
+          <button
+            onClick={handleCopyLink}
+            className="mt-6 bg-indigo-500 text-white rounded-md p-2 hover:bg-indigo-600 w-full ml-2"
+          >
+            Copy Link
+          </button>
+        </div>
       </div>
       <Footer />
     </div>

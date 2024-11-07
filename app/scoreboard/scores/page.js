@@ -1,132 +1,129 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
+import Pic from "@/app/assets/Pic.png";
 
-export default function Scores() {
-  const [judges, setJudges] = useState([]);
-  const [participants, setParticipants] = useState([]);
-  const [scores, setScores] = useState({});
-  const [sessionId, setSessionId] = useState(null);
-  const [category, setCategory] = useState(""); // New state for category
-  const [tournamentName, setTournamentName] = useState(""); // New state for tournament name
+const useScores = (sessionId) => {
+  const [scoreData, setScoreData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const id = urlParams.get("sessionId");
-    setSessionId(id);
+    const fetchScores = async () => {
+      setLoading(true);
+      setError(null);
 
-    if (!id) {
-      console.error("No sessionId found in the URL");
-      return;
-    }
-
-    const loadScores = () => {
-      const storedScores = localStorage.getItem(`scores-${id}`);
-      if (storedScores) {
-        const { judges, participants, scores, category, tournamentName } =
-          JSON.parse(storedScores);
-        setJudges(judges);
-        setParticipants(participants);
-        setScores(scores);
-        setCategory(category); // Load category
-        setTournamentName(tournamentName); // Load tournament name
-        console.log("Loaded Scores: ", {
-          judges,
-          participants,
-          scores,
-          category,
-          tournamentName,
-        });
+      if (sessionId) {
+        const data = localStorage.getItem(`scores-${sessionId}`);
+        if (data) {
+          setScoreData(JSON.parse(data));
+        } else {
+          setError("No setup data found for this session.");
+        }
       } else {
-        console.error("No scores found for this sessionId");
+        setError("Session ID is missing.");
+      }
+      setLoading(false);
+    };
+
+    fetchScores();
+
+    const handleStorageChange = (event) => {
+      if (event.key === `scores-${sessionId}`) {
+        fetchScores();
       }
     };
 
-    loadScores();
+    window.addEventListener("storage", handleStorageChange);
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, [sessionId]);
 
-    const intervalId = setInterval(() => {
-      loadScores();
-    }, 5000);
+  return { scoreData, loading, error };
+};
 
-    return () => clearInterval(intervalId);
-  }, []);
+const ScoreItem = ({ label, value }) => (
+  <div className="flex justify-between">
+    {label && <span>{label}</span>}
+    <span>{value ?? "-"}</span>
+  </div>
+);
+
+export default function Scores() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const sessionId = urlParams.get("sessionId");
+
+  const { scoreData, loading, error } = useScores(sessionId);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen text-xl">
+        Loading scores...
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-col h-screen">
-      <div className="container mx-auto flex flex-col justify-center items-center p-6 flex-grow">
-        <h1 className="text-4xl font-bold mb-6 text-black">Scoreboard</h1>
+    <>
+      {error ? (
+        <div className="text-red-500 text-center text-xl">{error}</div>
+      ) : (
+        <>
+          {scoreData && (
+            <>
+              <div className="flex flex-col h-screen">
+                <div className="flex justify-between pt-3 px-4">
+                  <div>
+                    <Image src={Pic} width={200} height={200} alt="Logo" />
+                  </div>
+                  {(scoreData.participants1 || scoreData.participants2) && (
+                    <div className="text-white flex items-start">
+                      <div className="bg-black flex p-3 gap-44 px-40 text-4xl font-bold">
+                        <ScoreItem value={scoreData.participants1} />
+                        <span className="text-6xl font-extrabold">VS</span>
+                        <div className="flex justify-center">
+                          <ScoreItem value={scoreData.participants2} />
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
-        <div className="mb-6 w-full max-w-md">
-          <h2 className="text-xl font-semibold mb-2 text-black">
-            Category: {category}
-          </h2>
-          <h2 className="text-xl font-semibold mb-2 text-black">
-            Tournament: {tournamentName}
-          </h2>
-        </div>
-
-        {participants.length === 0 ? (
-          <p className="text-gray-400">No participants added yet.</p>
-        ) : (
-          <table className="min-w-full bg-gray-800">
-            <thead className="bg-gray-700">
-              <tr>
-                <th className="border-4 border-gray-600 p-4 text-lg text-white">
-                  Participant
-                </th>
-                {judges.map((judge) => (
-                  <th
-                    key={judge}
-                    className="border-4 border-gray-600 p-4 text-lg text-white"
-                  >
-                    {judge}
-                  </th>
-                ))}
-                <th className="border-4 border-gray-600 p-4 text-lg text-white">
-                  Average Score
-                </th>
-                <th className="border-4 border-gray-600 p-4 text-lg text-white">
-                  Total Score
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {participants.map((participant) => {
-                const totalScore = judges.reduce(
-                  (total, judge) => total + (scores[judge]?.[participant] || 0),
-                  0
-                );
-                const averageScore =
-                  judges.length > 0
-                    ? (totalScore / judges.length).toFixed(2)
-                    : 0;
-
-                return (
-                  <tr key={participant}>
-                    <td className="border-4 border-gray-600 p-4 text-lg text-white text-center">
-                      {participant}
-                    </td>
-                    {judges.map((judge) => (
-                      <td
-                        key={judge}
-                        className="border-4 border-gray-600 p-4 text-lg text-white text-center"
-                      >
-                        {scores[judge]?.[participant] || 0}
-                      </td>
-                    ))}
-                    <td className="border-4 border-gray-600 p-4 text-lg text-white text-center">
-                      {averageScore}
-                    </td>
-                    <td className="border-4 border-gray-600 p-4 text-lg text-white text-center">
-                      {totalScore}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
-      </div>
-    </div>
+                  <div className="flex flex-col">
+                    {scoreData.category ? (
+                      <div className="bg-gradient-to-r from-yellow-400 to-yellow-200 text-white text-4xl font-extrabold p-5">
+                        <ScoreItem value={scoreData.category} />
+                      </div>
+                    ) : null}
+                    {scoreData.match ? (
+                      <div className="mt-2 flex justify-center">
+                        <div className="flex text-3xl font-bold">
+                          Match # <ScoreItem value={scoreData.match} />
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+                <div className="flex justify-center text-white pb-2 mt-auto">
+                  <div className="flex bg-black p-5 gap-6 text-4xl font-bold border-slate-500 border-8">
+                    <ScoreItem label="Tatami" value={scoreData.fieldTakami} />
+                    {(scoreData.ageBracket || scoreData.ageDirection) && (
+                      <div className="flex">
+                        <ScoreItem value={scoreData.ageBracket} />
+                        Yrs old <ScoreItem value={scoreData.ageDirection} />
+                      </div>
+                    )}
+                    <ScoreItem value={scoreData.rank} />
+                    <ScoreItem value={scoreData.ks} />
+                    <ScoreItem value={scoreData.gender} />
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </>
+      )}
+    </>
   );
 }

@@ -1,7 +1,6 @@
 "use client";
-import Link from "next/link";
 import Image from "next/image";
-import Logo from "@/app/assets/Logo.jpg";
+import Logo from "@/app/assets/Logo.png";
 import Footer from "./component/Footer";
 import { v4 as uuidv4 } from "uuid";
 
@@ -19,8 +18,8 @@ export default function Home() {
           <Image
             src={Logo}
             alt="Karate Network Logo"
-            width={250}
-            height={250}
+            width={0}
+            height={0}
             className="mb-4"
           />
         </div>
@@ -28,16 +27,16 @@ export default function Home() {
           The Karate Network Management System
         </h1>
         <div className="flex flex-col space-y-4">
-          <Link href="/bracket">
+          {/* <Link href="/bracket">
             <button className="border border-transparent p-3 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-300 w-64 text-center">
               Bracket Generator
             </button>
-          </Link>
+          </Link> */}
           <button
             onClick={handleScoreboardClick}
             className="border border-transparent p-3 bg-green-500 text-white rounded-md hover:bg-green-600 transition duration-300 w-64 text-center"
           >
-            Scoreboard
+            Begin Setup
           </button>
         </div>
       </div>
