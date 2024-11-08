@@ -48,7 +48,7 @@ export default function Scoreboard() {
 
     if (sessionId) {
       try {
-        const response = await fetch("http://localhost:3000/api/save-scores", {
+        const response = await fetch("/api/save-scores", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
