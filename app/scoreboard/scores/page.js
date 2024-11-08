@@ -16,7 +16,7 @@ const useScores = (sessionId) => {
       if (sessionId) {
         try {
           const response = await fetch(
-            `http://localhost:5000/api/get-scores?sessionId=${sessionId}`
+            `http:tknms.vercel.app:5000/api/get-scores?sessionId=${sessionId}`
           );
           const data = await response.json();
           setScoreData(data);
