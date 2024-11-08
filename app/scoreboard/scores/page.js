@@ -16,7 +16,7 @@ const useScores = (sessionId) => {
       if (sessionId) {
         try {
           const response = await fetch(
-            `/api/get-scores?sessionId=${sessionId}`
+            `http://localhost:3000/api/get-scores?sessionId=${sessionId}`
           );
           const data = await response.json();
           setScoreData(data);
