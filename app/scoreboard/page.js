@@ -49,7 +49,7 @@ export default function Scoreboard() {
     if (sessionId) {
       try {
         const response = await fetch(
-          "http:tknms.vercel.app:5000/api/save-scores",
+          "https:tknms.vercel.app:5000/api/save-scores",
           {
             method: "POST",
             headers: {
