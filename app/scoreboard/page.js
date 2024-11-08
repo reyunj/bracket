@@ -42,17 +42,40 @@ export default function Scoreboard() {
     }
   }, []);
 
-  const saveScores = () => {
+  const saveScores = async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const sessionId = urlParams.get("sessionId");
 
     if (sessionId) {
-      localStorage.setItem(`scores-${sessionId}`, JSON.stringify(formData));
-      setMessages({
-        ...messages,
-        successMessage: "Setup updated successfully!",
-      });
-      setTimeout(() => setMessages({ ...messages, successMessage: "" }), 3000);
+      try {
+        const response = await fetch("http://localhost:5000/api/save-scores", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            sessionId,
+            formData,
+          }),
+        });
+
+        const data = await response.json();
+        if (data.message === "Scores saved successfully!") {
+          setMessages({
+            ...messages,
+            successMessage: "Setup updated successfully!",
+          });
+          setTimeout(
+            () => setMessages({ ...messages, successMessage: "" }),
+            3000
+          );
+        }
+      } catch (error) {
+        setMessages({
+          ...messages,
+          errorMessage: "Error saving data to the server.",
+        });
+      }
     }
   };
 

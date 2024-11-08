@@ -1,6 +1,5 @@
 "use client";
-
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Pic from "@/app/assets/Pic.png";
 
@@ -15,10 +14,13 @@ const useScores = (sessionId) => {
       setError(null);
 
       if (sessionId) {
-        const data = localStorage.getItem(`scores-${sessionId}`);
-        if (data) {
-          setScoreData(JSON.parse(data));
-        } else {
+        try {
+          const response = await fetch(
+            `http://localhost:5000/api/get-scores?sessionId=${sessionId}`
+          );
+          const data = await response.json();
+          setScoreData(data);
+        } catch (error) {
           setError("No setup data found for this session.");
         }
       } else {
@@ -28,18 +30,6 @@ const useScores = (sessionId) => {
     };
 
     fetchScores();
-
-    const handleStorageChange = (event) => {
-      if (event.key === `scores-${sessionId}`) {
-        fetchScores();
-      }
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-    };
   }, [sessionId]);
 
   return { scoreData, loading, error };
