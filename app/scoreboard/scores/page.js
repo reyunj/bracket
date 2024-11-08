@@ -16,7 +16,7 @@ const useScores = (sessionId) => {
       if (sessionId) {
         try {
           const response = await fetch(
-            `/api/get-scores?sessionId=${sessionId}`
+            `https://bracket-nu.vercel.app/api/get-scores?sessionId=${sessionId}`
           );
           const data = await response.json();
           setScoreData(data);
