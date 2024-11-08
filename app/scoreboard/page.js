@@ -48,19 +48,16 @@ export default function Scoreboard() {
 
     if (sessionId) {
       try {
-        const response = await fetch(
-          "https:tknms.vercel.app:5000/api/save-scores",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              sessionId,
-              formData,
-            }),
-          }
-        );
+        const response = await fetch("https:tknms.vercel.app/api/save-scores", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            sessionId,
+            formData,
+          }),
+        });
 
         const data = await response.json();
         if (data.message === "Scores saved successfully!") {
